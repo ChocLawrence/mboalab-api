@@ -8,8 +8,9 @@ const ProfileSchema = new Schema(
       default: null,
     },
     avatar: {
-      data: { type: Buffer, required: false, default: null },
-      contentType: { type: String, required: false, default: null },
+      type: String,
+      required: false,
+      default: null,
     },
     bio: {
       type: String,
