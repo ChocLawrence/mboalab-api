@@ -25,6 +25,7 @@ import feedbackRoutes from "./routes/feedbacks";
 import countryRoutes from "./routes/countries";
 import timezoneRoutes from "./routes/timezones";
 import languageRoutes from "./routes/languages";
+import healthRoutes from "./routes/health";
 
 // Import passport middleware
 require("./middlewares/passport-middleware");
@@ -49,6 +50,7 @@ app.set("view engine", "ejs");
 app.use("/", express.static(join(__dirname, "./templates")));
 
 // Inject Sub router and apis
+app.use("/", healthRoutes);
 app.use("/auth", authRoutes);
 app.use("/users", userRoutes);
 app.use("/posts", postRoutes);
