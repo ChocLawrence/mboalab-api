@@ -4,23 +4,39 @@ import Paginator from "mongoose-paginate-v2";
 const PostSchema = new Schema(
   {
     postImage: {
-      data: { type: Buffer, required: false, default: null },
-      contentType: { type: String, required: false, default: null },
+      type: String,
+      required: false,
+      default: null,
+    },
+    authorname: {
+      type: String,
+      required: false,
+      default: null,
+    },
+    authorusername: {
+      type: String,
+      required: false,
+      default: null,
     },
     slug: {
       type: String,
       required: true,
-      default: null
+      default: null,
+    },
+    views: {
+      type: Number,
+      required: false,
+      default: 0,
     },
     title: {
       type: String,
       required: true,
-      default: null
+      default: null,
     },
     content: {
       type: String,
       required: true,
-      default: null
+      default: null,
     },
     status: {
       type: String,
@@ -37,25 +53,30 @@ const PostSchema = new Schema(
       ref: "users",
       type: Schema.Types.ObjectId,
       required: false,
-      default: null
+      default: null,
     },
     remarks: {
       text: {
         type: String,
         required: false,
-        default: null
+        default: null,
       },
       user: {
         ref: "users",
         type: Schema.Types.ObjectId,
-        default: null
+        default: null,
       },
+    },
+    categoryname: {
+      type: String,
+      required: false,
+      default: null,
     },
     category: {
       ref: "categories",
       type: Schema.Types.ObjectId,
       required: true,
-      default: null
+      default: null,
     },
     likes: {
       count: { type: Number, default: 0 },
@@ -63,7 +84,7 @@ const PostSchema = new Schema(
         {
           ref: "users",
           type: Schema.Types.ObjectId,
-          default: null
+          default: null,
         },
       ],
     },
@@ -73,14 +94,14 @@ const PostSchema = new Schema(
         {
           ref: "users",
           type: Schema.Types.ObjectId,
-          default: null
+          default: null,
         },
       ],
     },
     author: {
       ref: "users",
       type: Schema.Types.ObjectId,
-      default: null
+      default: null,
     },
   },
   { timestamps: true }

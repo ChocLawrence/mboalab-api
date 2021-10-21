@@ -49,17 +49,9 @@ exports.myProfile = async (req, res, next) => {
           );
         }
 
-        if (doc.avatar.data) {
-          let buffer = doc.avatar.data;
-          var base64String = buffer.toString("base64");
-        }
-
         return {
           account: doc.account,
-          avatar: {
-            data: base64String ? base64String : null,
-            contentType: base64String ? doc.avatar.contentType : null,
-          },
+          avatar: doc.avatar,
           bio: doc.bio,
           language: doc.language,
           country: doc.country,
@@ -89,8 +81,7 @@ exports.updateProfile = async (req, res, next) => {
   try {
     let { body, files, user } = req;
     let updating = {};
-    var currentImage, currentContentType, newImage, newImageMime;
-
+    var image, newImage, newImageMime, base64String;
     let profile = await Profile.findOne({ account: user._id });
 
     if (!profile) {
@@ -113,13 +104,8 @@ exports.updateProfile = async (req, res, next) => {
       }
     }
 
-    if (profile.avatar.data) {
-      currentImage = profile.avatar.data;
-      currentContentType = profile.avatar.contentType;
-    }
-
     if (files) {
-      newImage = binary(files.file.data);
+      image = binary(files.file.data);
 
       if (
         files.file.mimetype !== "image/png" &&
@@ -135,6 +121,10 @@ exports.updateProfile = async (req, res, next) => {
       } else {
         newImageMime = files.file.mimetype;
       }
+
+      base64String = image.toString("base64");
+      newImage = "data:" + newImageMime + ";base64," + base64String;
+      updating.avatar = newImage;
     }
 
     //verify ids of country,language,timezones
@@ -186,10 +176,6 @@ exports.updateProfile = async (req, res, next) => {
     await Profile.findOneAndUpdate(
       { account: user._id },
       {
-        avatar: {
-          data: newImage ? newImage : currentImage,
-          contentType: newImageMime ? newImageMime : currentContentType,
-        },
         ...updating,
       },
       { new: true }
@@ -211,10 +197,6 @@ exports.getProfile = async (req, res, next) => {
       throw new ErrorHandler(404, "getProfile", 13010, "User not found.");
     }
 
-    if (user._id.toString() !== req.user._id.toString()) {
-      throw new ErrorHandler(401, "getProfile", 13011, "Unauthorized access");
-    }
-
     let profile = await Profile.findOne({ account: user._id }).map((doc) => {
       if (!doc) {
         throw new ErrorHandler(
@@ -225,22 +207,15 @@ exports.getProfile = async (req, res, next) => {
         );
       }
 
-      if (doc.avatar.data) {
-        let buffer = doc.avatar.data;
-        var base64String = buffer.toString("base64");
-      }
-
       return {
-        account: doc.account,
-        avatar: {
-          data: base64String ? base64String : null,
-          contentType: base64String ? doc.avatar.contentType : null,
-        },
+        firstname: user.firstname,
+        lastname: user.lastname,
+        username: user.username,
+        avatar: doc.avatar,
         bio: doc.bio,
         country: doc.country,
         language: doc.language,
         address: doc.address,
-        _id: doc._id,
       };
     });
 
@@ -255,7 +230,6 @@ exports.getProfile = async (req, res, next) => {
 
     let resultObj = {
       ...profile,
-      account: user.getUserInfo(),
     };
 
     SuccessHandler(res, "success", 200, "ok", resultObj);

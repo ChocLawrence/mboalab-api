@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { userAuth} from "../middlewares/auth-guard";
+import { userAuth } from "../middlewares/auth-guard";
 import { validateAdmin } from "../middlewares/admin-guard";
 import validator from "../middlewares/validator-middleware";
 import { postValidations, imageValidations } from "../validators";
@@ -13,7 +13,7 @@ const router = Router();
  * @access private
  * @type POST
  */
-router.get("/", userAuth, PostsController.getAllPosts);
+router.get("/", PostsController.getAllPosts);
 
 /**
  * @description Get Single Post
@@ -22,6 +22,30 @@ router.get("/", userAuth, PostsController.getAllPosts);
  * @type GET
  */
 router.get("/:id", userAuth, PostsController.getSinglePost);
+
+/**
+ * @description Get Next Post
+ * @api /:id
+ * @access private
+ * @type GET
+ */
+router.get("/next/:id", userAuth, PostsController.getNextPost);
+
+/**
+ * @description Get Previous Post
+ * @api /:id
+ * @access private
+ * @type GET
+ */
+router.get("/previous/:id", userAuth, PostsController.getPreviousPost);
+
+/**
+ * @description Get Single Post
+ * @api /:id
+ * @access private
+ * @type GET
+ */
+router.get("/slug/:id", PostsController.getSinglePostBySlug);
 
 /**
  * @description To create a new post by the authenticated User

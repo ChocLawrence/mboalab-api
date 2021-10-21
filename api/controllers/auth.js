@@ -72,7 +72,7 @@ exports.signUp = async (req, res, next) => {
       );
     }
     user = new User({
-      username: req.body.username,
+      username: req.body.username.toLowerCase(),
       firstname: req.body.firstname,
       lastname: req.body.lastname,
       gender: req.body.gender,
@@ -140,11 +140,11 @@ exports.login = async (req, res, next) => {
     let isEmail = validEmail(username);
 
     if (isEmail) {
-      let email = username.toString().trim();
+      let email = username.toString().trim().toLowerCase();
       user = await User.findOne({ email });
     } else {
       //check if username
-      user = await User.findOne({ username: username.toString().trim() });
+      user = await User.findOne({ username: username.toString().trim().toLowerCase() });
     }
 
     if (!user) {

@@ -36,6 +36,7 @@ router.put("/update-profile", userAuth, ProfilesController.updateProfile);
  * @access Public
  * @type GET
  */
-router.get("/:username", userAuth, ProfilesController.getProfile);
+router.get("/:username", ProfilesController.getProfile);
+
 
 export default router;

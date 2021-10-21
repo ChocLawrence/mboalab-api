@@ -35,8 +35,8 @@ exports.getAllCategories = async (req, res, next) => {
               slug: doc.slug,
               description: doc.description,
               follows: doc.follows,
-              created_at: doc.createdAt,
-              updated_at: doc.updatedAt,
+              createdat: doc.createdAt,
+              updatedat: doc.updatedAt,
               _id: doc._id,
             };
           }),

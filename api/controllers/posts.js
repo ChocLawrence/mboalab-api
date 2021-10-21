@@ -1,9 +1,10 @@
-import { Post, Comment, Category } from "../models";
+import { Post, Comment, Category, User } from "../models";
 import { binary } from "../config";
 import SlugGenerator from "../functions/slug-generator";
 import createNotification from "../functions/notification";
 import { validDate, subtractMonths } from "../functions/generic";
 import { ErrorHandler, SuccessHandler } from "../functions/response-handler";
+const {ObjectId} = require('mongodb');
 
 exports.getAllPosts = async (req, res, next) => {
   try {
@@ -108,21 +109,18 @@ exports.getAllPosts = async (req, res, next) => {
         const response = {
           count: docs.length,
           posts: docs.map((doc) => {
-            if (doc.postImage.data) {
-              let buffer = doc.postImage.data;
-              var base64String = buffer.toString("base64");
-            }
-
             return {
               title: doc.title,
-              postImage: {
-                data: base64String ? base64String : null,
-                contentType: base64String ? doc.postImage.contentType : null,
-              },
+              postImage: doc.postImage,
               content: doc.content,
               slug: doc.slug,
               status: doc.status,
+              author: doc.author,
+              authorname: doc.authorname,
+              authorusername: doc.authorusername,
+              views: doc.views,
               category: doc.category,
+              categoryname: doc.categoryname,
               likes: doc.likes,
               favorites: doc.favorites,
               createdat: doc.createdAt,
@@ -158,19 +156,18 @@ exports.getSinglePost = async (req, res, next) => {
         );
       }
 
-      let buffer = doc.postImage.data;
-      let base64String = buffer.toString("base64");
-
       return {
         title: doc.title,
-        postImage: {
-          data: base64String,
-          contentType: doc.postImage.contentType,
-        },
+        postImage: doc.postImage,
         content: doc.content,
         slug: doc.slug,
         status: doc.status,
         category: doc.category,
+        author: doc.author,
+        views: doc.views,
+        authorname: doc.authorname,
+        authorusername: doc.authorusername,
+        categoryname: doc.categoryname,
         likes: doc.likes,
         favorites: doc.favorites,
         createdat: doc.createdAt,
@@ -194,11 +191,183 @@ exports.getSinglePost = async (req, res, next) => {
   }
 };
 
+exports.getSinglePostBySlug = async (req, res, next) => {
+  try {
+    let { id } = req.params;
+
+    let post = await Post.findOne({ slug: id }).map((doc) => {
+      if (!doc) {
+        throw new ErrorHandler(
+          404,
+          "getSinglePostBySlug",
+          12001,
+          "Post with slug not found"
+        );
+      }
+
+      return {
+        title: doc.title,
+        postImage: doc.postImage,
+        content: doc.content,
+        slug: doc.slug,
+        status: doc.status,
+        category: doc.category,
+        author: doc.author,
+        views: doc.views,
+        categoryname: doc.categoryname,
+        authorname: doc.authorname,
+        authorusername: doc.authorusername,
+        likes: doc.likes,
+        favorites: doc.favorites,
+        createdat: doc.createdAt,
+        updatedat: doc.updatedAt,
+        _id: doc._id,
+      };
+    });
+
+    if (!post) {
+      throw new ErrorHandler(
+        404,
+        "getSinglePost",
+        12002,
+        "Post with id not found"
+      );
+    }
+
+    SuccessHandler(res, "success", 200, "ok", post);
+  } catch (err) {
+    return next(err);
+  }
+};
+
+exports.getNextPost = async (req, res, next) => {
+  try {
+    let { id } = req.params;
+
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+      // Yes, it's a valid ObjectId, proceed with `findById` call.
+      throw new ErrorHandler(404, "getNextPost", 12000, "Malformed ID");
+    }
+
+    let post = await Post.find()
+      .sort({ _id: 1 })
+      .limit(1)
+      .map((doc) => {
+        if (!doc) {
+          throw new ErrorHandler(
+            404,
+            "getNextPost",
+            12001,
+            "Post with id not found"
+          );
+        }
+
+        return {
+          title: doc.title,
+          postImage: doc.postImage,
+          content: doc.content,
+          slug: doc.slug,
+          status: doc.status,
+          category: doc.category,
+          author: doc.author,
+          views: doc.views,
+          authorname: doc.authorname,
+          authorusername: doc.authorusername,
+          categoryname: doc.categoryname,
+          likes: doc.likes,
+          favorites: doc.favorites,
+          createdat: doc.createdAt,
+          updatedat: doc.updatedAt,
+          _id: doc._id,
+        };
+      });
+
+    if (!post) {
+      throw new ErrorHandler(
+        404,
+        "getNextPost",
+        12002,
+        "Post with id not found"
+      );
+    }
+
+    SuccessHandler(res, "success", 200, "ok", post);
+  } catch (err) {
+    return next(err);
+  }
+};
+
+exports.getPreviousPost = async (req, res, next) => {
+  try {
+    let { id } = req.params;
+
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+      // Yes, it's a valid ObjectId, proceed with `findById` call.
+      throw new ErrorHandler(404, "getNextPost", 12000, "Malformed ID");
+    }
+
+    let post = await Post.find({ _id: { $gt: id } })
+      .sort({ _id: -1 })
+      .limit(1)
+      .map((doc) => {
+        if (!doc) {
+          throw new ErrorHandler(
+            404,
+            "getNextPost",
+            12001,
+            "Post with id not found"
+          );
+        }
+
+        return {
+          title: doc.title,
+          postImage: doc.postImage,
+          content: doc.content,
+          slug: doc.slug,
+          status: doc.status,
+          category: doc.category,
+          author: doc.author,
+          views: doc.views,
+          authorname: doc.authorname,
+          authorusername: doc.authorusername,
+          categoryname: doc.categoryname,
+          likes: doc.likes,
+          favorites: doc.favorites,
+          createdat: doc.createdAt,
+          updatedat: doc.updatedAt,
+          _id: doc._id,
+        };
+      });
+
+    if (!post) {
+      throw new ErrorHandler(
+        404,
+        "getNextPost",
+        12002,
+        "Post with id not found"
+      );
+    }
+
+    SuccessHandler(res, "success", 200, "ok", post);
+  } catch (err) {
+    return next(err);
+  }
+};
+
 exports.createPost = async (req, res, next) => {
   try {
     // Create a new Post
     let { body, files } = req;
-    var image, imageMime;
+    var image, imageMime, newImage, base64String;
+
+    if (body.title.length > 60) {
+      throw new ErrorHandler(
+        400,
+        "createPost",
+        120033,
+        "Title too long.Keep below 60 characters"
+      );
+    }
 
     let slug = SlugGenerator(body.title);
 
@@ -213,19 +382,35 @@ exports.createPost = async (req, res, next) => {
       );
     }
 
+    let category = await Category.findById(body.category);
+
+    if (!category) {
+      throw new ErrorHandler(404, "createPost", 40002, "Category not found");
+    }
+
+    let user = await User.findById(req.user._id);
+
+    if (!user) {
+      throw new ErrorHandler(404, "createPost", 13010, "Invalid user");
+    }
+
     if (files) {
       image = binary(files.file.data);
+      base64String = image.toString("base64");
       imageMime = files.file.mimetype;
+      newImage = "data:" + imageMime + ";base64," + base64String;
     }
 
     let post = new Post({
       author: req.user._id,
-      postImage: {
-        data: image ? image : null,
-        contentType: imageMime ? imageMime : null,
-      },
-      ...body,
+      categoryname: category.name,
+      category: body.category,
+      postImage: newImage,
+      title: body.title,
+      content: body.content,
       slug: slug,
+      authorname: user.firstname + " " + user.lastname,
+      authorusername: user.username,
     });
 
     await post.save();
@@ -240,7 +425,8 @@ exports.updatePost = async (req, res, next) => {
   try {
     let { id } = req.params;
     let { user, files, body } = req;
-    var currentImage, currentContentType, newImage, newImageMime;
+    let updating = {};
+    var image, imageMime, newImage, base64String, category;
     // Chcek if the post with the id is in the database or not?
     let post = await Post.findById(id);
 
@@ -257,25 +443,45 @@ exports.updatePost = async (req, res, next) => {
       );
     }
 
-    if (post.postImage.data) {
-      currentImage = post.postImage.data;
-      currentContentType = post.postImage.contentType;
+    if (body.title && body.title.length > 60) {
+      throw new ErrorHandler(
+        400,
+        "updatePost",
+        120033,
+        "Title too long.Keep below 60 characters"
+      );
+    }
+
+    if (body.category) {
+      category = await Category.findById(body.category);
+
+      if (!category) {
+        throw new ErrorHandler(404, "updatePost", 40002, "Category not found");
+      }
     }
 
     if (files) {
-      newImage = binary(files.file.data);
-      newImageMime = files.file.mimetype;
+      image = binary(files.file.data);
+      base64String = image.toString("base64");
+      imageMime = files.file.mimetype;
+      newImage = "data:" + imageMime + ";base64," + base64String;
+      updating.postImage = newImage;
+    }
+
+    if (body.title) {
+      updating.title = body.title;
+      updating.slug = SlugGenerator(body.title);
+    }
+    if (body.content) updating.content = body.content;
+    if (body.category) {
+      updating.category = body.category;
+      updating.categoryname = category.name;
     }
 
     post = await Post.findOneAndUpdate(
       { author: user._id, _id: id },
       {
-        ...body,
-        postImage: {
-          data: newImage ? newImage : currentImage,
-          contentType: newImageMime ? newImageMime : currentContentType,
-        },
-        slug: SlugGenerator(body.title),
+        ...updating,
       },
       { new: true }
     );
