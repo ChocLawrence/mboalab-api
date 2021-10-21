@@ -4,14 +4,32 @@ import SlugGenerator from "../functions/slug-generator";
 import createNotification from "../functions/notification";
 import { validDate, subtractMonths } from "../functions/generic";
 import { ErrorHandler, SuccessHandler } from "../functions/response-handler";
-const {ObjectId} = require('mongodb');
+const { ObjectId } = require("mongodb");
 
 exports.getAllPosts = async (req, res, next) => {
   try {
-    let { category, start, end, status, count, slug } = req.query;
+    let { category, start, end, status, count, slug, author } = req.query;
     let finalStart = "";
     let finalEnd = "";
     let today = new Date();
+
+    if (author && !author.match(/^[0-9a-fA-F]{24}$/)) {
+      // Yes, it's a valid ObjectId, proceed with `findById` call.
+      throw new ErrorHandler(404, "getAllPosts", 21001, "Malformed Author ID");
+    }
+
+    if (author && author.match(/^[0-9a-fA-F]{24}$/)) {
+      var authorFound = await User.findById(author);
+
+      if (!authorFound) {
+        throw new ErrorHandler(
+          404,
+          "getAllPosts",
+          21002,
+          "User with id not found"
+        );
+      }
+    }
 
     if (category && !category.match(/^[0-9a-fA-F]{24}$/)) {
       // Yes, it's a valid ObjectId, proceed with `findById` call.
@@ -85,6 +103,10 @@ exports.getAllPosts = async (req, res, next) => {
         $lt: finalEnd,
       },
     };
+
+    if (authorFound) {
+      searchObject.author = authorFound._id;
+    }
 
     if (categoryFound) {
       searchObject.category = categoryFound._id;
