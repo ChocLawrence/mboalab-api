@@ -423,6 +423,15 @@ exports.createPost = async (req, res, next) => {
       newImage = "data:" + imageMime + ";base64," + base64String;
     }
 
+    if (body.content.length > 6000) {
+      throw new ErrorHandler(
+        400,
+        "createPost",
+        120033,
+        "Content too long.Keep below 6000 characters(< 1250 words)"
+      );
+    }
+
     let post = new Post({
       author: req.user._id,
       categoryname: category.name,
@@ -494,7 +503,18 @@ exports.updatePost = async (req, res, next) => {
       updating.title = body.title;
       updating.slug = SlugGenerator(body.title);
     }
-    if (body.content) updating.content = body.content;
+    if (body.content) {
+      if (body.content.length > 6000) {
+        throw new ErrorHandler(
+          400,
+          "updatePost",
+          120033,
+          "Content too long.Keep below 6000 characters"
+        );
+      } else {
+        updating.content = body.content;
+      }
+    }
     if (body.category) {
       updating.category = body.category;
       updating.categoryname = category.name;

@@ -36,6 +36,7 @@ const PostSchema = new Schema(
     content: {
       type: String,
       required: true,
+      maxlength: 6000,
       default: null,
     },
     status: {
